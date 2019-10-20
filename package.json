@@ -11,8 +11,17 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.19.0",
+    "co": "^4.6.0",
     "ejs": "^2.7.1",
     "express": "^4.17.1",
-    "request": "^2.88.0"
+    "heroku-client": "^3.0.7",
+    "request": "^2.88.0",
+    "bcrypt": "^3.0.6",
+    "cookie-parser": "^1.4.4",
+    "express-session": "^1.16.2",
+    "morgan": "^1.9.1",
+    "pg": "^7.12.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^5.21.0"
   }
 }
