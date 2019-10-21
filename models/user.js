@@ -13,7 +13,7 @@ const sequelize = new Sequelize('postgres', 'postgres', 'nitigya', {
   });
 
 // setup User model and its fields.
-var User = sequelize.define('users', {
+const User = sequelize.define('users', {
     username: {
         type: Sequelize.STRING,
         unique: true,

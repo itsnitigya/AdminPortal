@@ -66,6 +66,7 @@ app.route('/signup')
           res.redirect('/dashboard');
       })
       .catch(error => {
+          console.log(error);
           res.redirect('/signup');
       });
   });
@@ -118,26 +119,53 @@ app.get('/pythonanywhere', function (req, res) {
 })
 
 app.post('/pythonanywhere', function (req, res) {
-    let city = req.body.city;
-    let apkey ='f0ef50b71dbbe9caef0d7a13eddbbef8';
-    let token = '';
+    let username = req.body.username;
+    let token = req.body.token;
     var clientServerOptions = {
-        uri: 'https://www.pythonanywhere.com/api/v0/user/itsnitigya/cpu/',
+        uri: `https://www.pythonanywhere.com/api/v0/user/${username}/cpu/`,
         method: 'GET',
         headers: {
-            'Authorization' : 'Token a848520114dcfe502198306cf816590b4e99f585',
+            'Authorization' : `Token ${token}`,
         }
     }
     request(clientServerOptions, function (err, response, body) {
       if(err){
-        res.render('index', {weather: null, error: 'Error, please try again'});
+        res.render('pythonanywhere',  {weather: null, error: 'Error, please try again'});
       } else {
         let weather = JSON.parse(body);
         console.log(weather.daily_cpu_limit_seconds);
         let ans = weather.daily_cpu_limit_seconds;
-          let weatherText = `Its ${ans}`;
-          res.render('pythonanywhere', {weather: weatherText, error: null});
-        
+        let weatherText = `Daily Cpu Limit is ${ans}`;
+        res.render('pythonanywhere', {weather: weatherText, error: null});
+      }
+    });
+  })
+
+  app.get('/heroku', function (req, res) {
+    res.render('heroku',{count:null,error:null});
+  })
+
+  app.post('/heroku', function (req, res) {
+    let username = req.body.username;
+    let token = 'bbe7ac5a-544f-452a-a3c6-1a10bab4b2ea';
+    var clientServerOptions = {
+        uri: `https://api.heroku.com/apps`,
+        method: 'GET',
+        headers: {
+            'Accept': 'application/vnd.heroku+json; version=3',
+            'Authorization' : `Bearer ${token}`,
+        }
+    }
+    request(clientServerOptions, function (err, response, body) {
+      if(err){
+        res.render('heroku',{count:null,error:err});
+      } else {
+        let weather = JSON.parse(body);
+        let count  = Object.keys(weather).length;
+        console.log(weather);
+        console.log(count);
+        count = `Total Apps Running : ${count}`;
+        res.render('heroku',{count:count,error:null});
       }
     });
   })
