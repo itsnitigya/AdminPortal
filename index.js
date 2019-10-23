@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const morgan = require('morgan');
 const User = require('./models/user');
+const Token = require('./models/token');
 
 const app = express();
 
@@ -18,7 +19,7 @@ app.use(cookieParser());
 
 app.use(session({
   key: 'user_sid',
-  secret: 'somerandonstuffs',
+  secret: 'adminportal',
   resave: false,
   saveUninitialized: false,
   cookie: {
@@ -71,6 +72,50 @@ app.route('/signup')
       });
   });
 
+  app.route('/tokens')
+  .get((req, res) => {
+      res.render('tokens');
+  })
+  .post((req, res) => {
+     let username = req.body.username;
+     let name = req.body.name;
+     let token = req.body.token;
+     Token.findOne({ where: { name : name } }).then(function (user) {
+        if (user) {
+              Token.destroy({
+                where: { name: name }
+              })
+              .then(()=> {
+                Token.create({
+                    name: name,
+                    username: username,
+                    token: token
+                })
+                .then(() => {
+                    res.redirect('/tokens');
+                })
+                .catch(error => {
+                    console.log(error);
+                    res.redirect('/tokens');
+                });
+              });
+        } else {
+            Token.create({
+                name: name,
+                username: username,
+                token: token
+            })
+            .then(() => {
+                res.redirect('/tokens');
+            })
+            .catch(error => {
+                console.log(error);
+                res.redirect('/tokens');
+            });
+        }
+    });
+  });
+
 
 // route for user Login
 app.route('/login')
@@ -78,7 +123,7 @@ app.route('/login')
       res.render('login');
   })
   .post((req, res) => {
-      var username = req.body.username,
+      let username = req.body.username,
           password = req.body.password;
 
       User.findOne({ where: { username: username } }).then(function (user) {
@@ -115,30 +160,43 @@ app.get('/logout', (req, res) => {
 });
 
 app.get('/pythonanywhere', function (req, res) {
-  res.render('pythonanywhere',{weather: null, error: null});
+  res.render('pythonanywhere',{data: null, error: null});
 })
 
 app.post('/pythonanywhere', function (req, res) {
-    let username = req.body.username;
-    let token = req.body.token;
-    var clientServerOptions = {
-        uri: `https://www.pythonanywhere.com/api/v0/user/${username}/cpu/`,
-        method: 'GET',
-        headers: {
-            'Authorization' : `Token ${token}`,
+    let name = 'python';
+    let username = '';
+    let token = '';
+    Token.findOne({ where: { name: 'python'  } }).then(function (user) {
+        if (user) {
+            console.log('Success');
+            console.log(user.dataValues.username);
+            console.log(user.dataValues.token);
+            username = user.dataValues.username;
+            token = user.dataValues.token;
+        } else { 
+            res.render('pythonanywhere',{data:null,error:"Error in DB"});
         }
-    }
-    request(clientServerOptions, function (err, response, body) {
-      if(err){
-        res.render('pythonanywhere',  {weather: null, error: 'Error, please try again'});
-      } else {
-        let weather = JSON.parse(body);
-        console.log(weather.daily_cpu_limit_seconds);
-        let ans = weather.daily_cpu_limit_seconds;
-        let weatherText = `Daily Cpu Limit is ${ans}`;
-        res.render('pythonanywhere', {weather: weatherText, error: null});
-      }
-    });
+    }).then(()=> {
+        var clientServerOptions = {
+            uri: `https://www.pythonanywhere.com/api/v0/user/${username}/cpu/`,
+            method: 'GET',
+            headers: {
+                'Authorization' : `Token ${token}`,
+            }
+        }
+        request(clientServerOptions, function (err, response, body) {
+          if(err){
+            res.render('pythonanywhere',  {data: null, error: 'Error, please try again'});
+          } else {
+            let data = JSON.parse(body);
+            console.log(data.daily_cpu_limit_seconds);
+            let ans = data.daily_cpu_limit_seconds;
+            ans = `Daily Cpu Limit is ${ans}`;
+            res.render('pythonanywhere', {data:ans, error: null});
+          }
+        });
+    })
   })
 
   app.get('/heroku', function (req, res) {
@@ -146,28 +204,35 @@ app.post('/pythonanywhere', function (req, res) {
   })
 
   app.post('/heroku', function (req, res) {
-    let username = req.body.username;
-    let token = 'bbe7ac5a-544f-452a-a3c6-1a10bab4b2ea';
-    var clientServerOptions = {
-        uri: `https://api.heroku.com/apps`,
-        method: 'GET',
-        headers: {
-            'Accept': 'application/vnd.heroku+json; version=3',
-            'Authorization' : `Bearer ${token}`,
+    let token = '';
+    Token.findOne({ where: { name: 'heroku'  } }).then(function (user) {
+        if (user){
+            token = user.dataValues.token;
+        } else { 
+            res.render('pythonanywhere',{data:null,error:"Error in DB"});
         }
-    }
-    request(clientServerOptions, function (err, response, body) {
-      if(err){
-        res.render('heroku',{count:null,error:err});
-      } else {
-        let weather = JSON.parse(body);
-        let count  = Object.keys(weather).length;
-        console.log(weather);
-        console.log(count);
-        count = `Total Apps Running : ${count}`;
-        res.render('heroku',{count:count,error:null});
-      }
-    });
+    }).then(()=> {
+        var clientServerOptions = {
+            uri: `https://api.heroku.com/apps`,
+            method: 'GET',
+            headers: {
+                'Accept': 'application/vnd.heroku+json; version=3',
+                'Authorization' : `Bearer ${token}`,
+            }
+        }
+        request(clientServerOptions, function (err, response, body) {
+          if(err){
+            res.render('heroku',{count:null,error:err});
+          } else {
+            let weather = JSON.parse(body);
+            let count  = Object.keys(weather).length;
+            console.log(weather);
+            console.log(count);
+            count = `Total Apps Running : ${count}`;
+            res.render('heroku',{count:count,error:null});
+          }
+        });
+     });
   })
 
   app.listen(app.get('port'), () => console.log(`App started on port ${app.get('port')}`));

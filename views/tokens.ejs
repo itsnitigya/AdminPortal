@@ -7,20 +7,15 @@
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:300' rel='stylesheet' type='text/css'>
   </head>
   <body>
-    <h1>Python Anywhere Dashboard</h1>
+    <h1>Add Tokens</h1>
     <div class="container">
       <fieldset>
-        <form action="/pythonanywhere" method="post">
-          <input name="username" type="text" class="ghost-input" placeholder="Enter Your Username">
+        <form action="/tokens" method="post">
+          <input name="name" type="text" class="ghost-input" placeholder="Enter API Name">
+          <input name="username" type="text" class="ghost-input" placeholder="Enter API Username">
           <input name="token" type="text" class="ghost-input" placeholder="Enter API Token">
-          <input type="submit" class="ghost-button" value="Get Data">
+          <input type="submit" class="ghost-button" value="Enter in DB">
         </form>
-        <% if(data !== null){ %>
-          <p><%= data %></p>
-        <% } %>
-        <% if(error !== null){ %>
-          <p><%= error %></p>
-        <% } %>
       </fieldset>
     </div>
   </body>
